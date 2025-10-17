@@ -1,9 +1,14 @@
+"""
+Pipeline principal orquestado con Prefect
+"""
+
 from prefect import flow
 from src.data_processing import (
     load_data,
     clean_data,
     get_X_y,
-    split_data
+    split_data,
+    get_top_consumed_substances
 )
 from src.model_training import train_all_models
 from src.evaluation import (
@@ -12,11 +17,18 @@ from src.evaluation import (
     save_metrics,
     get_best_model
 )
-from utils import DATA_PATH, TARGET_COLUMNS
+from src.visualization import (
+    plot_confusion_matrix,
+    plot_model_comparison,
+    plot_feature_importance,
+    analyze_risk_profiles,
+    plot_risk_profiles
+)
+from utils import DATA_PATH, TARGET_COLUMNS, FEATURE_COLUMNS
 
 
 @flow(name="Pipeline de Predicción - Una Sustancia")
-def drug_prediction_single_substance(substance="Cannabis"):
+def drug_prediction_single_substance(substance="Semer"):
     """
     Pipeline completo para predecir consumo de una sustancia
     
@@ -45,6 +57,16 @@ def drug_prediction_single_substance(substance="Cannabis"):
     
     # 5. Identificar mejor modelo
     best_model = get_best_model(df_comparison)
+    best_result = [r for r in evaluation_results if r['model_name'] == best_model['Modelo']][0]
+    
+    # 6. Generar visualizaciones
+    plot_model_comparison(df_comparison, substance)
+    plot_confusion_matrix(best_result['confusion_matrix'], substance, best_model['Modelo'])
+    plot_feature_importance(best_result['model'], FEATURE_COLUMNS, substance, best_model['Modelo'])
+    
+    # 7. Analizar perfiles de riesgo
+    profiles = analyze_risk_profiles(y_test, best_result['y_pred'], substance)
+    plot_risk_profiles(profiles, substance)
     
     print(f"\n{'#'*80}")
     print(f"# PIPELINE COMPLETADO PARA: {substance}")
@@ -55,7 +77,8 @@ def drug_prediction_single_substance(substance="Cannabis"):
         'models': models_dict,
         'evaluation': evaluation_results,
         'comparison': df_comparison,
-        'best_model': best_model
+        'best_model': best_model,
+        'risk_profiles': profiles
     }
 
 
@@ -100,10 +123,25 @@ def drug_prediction_multiple_substances(substances=None):
         df_comparison = compare_models(evaluation_results)
         save_metrics(df_comparison, f"{substance}_comparison.csv")
         
+        # Visualizaciones
+        plot_model_comparison(df_comparison, substance)
+        
+        # Mejor modelo
+        best_model = get_best_model(df_comparison)
+        best_result = [r for r in evaluation_results if r['model_name'] == best_model['Modelo']][0]
+        
+        plot_confusion_matrix(best_result['confusion_matrix'], substance, best_model['Modelo'])
+        plot_feature_importance(best_result['model'], FEATURE_COLUMNS, substance, best_model['Modelo'])
+        
+        # Perfiles de riesgo
+        profiles = analyze_risk_profiles(y_test, best_result['y_pred'], substance)
+        plot_risk_profiles(profiles, substance)
+        
         # Guardar resultados
         all_results[substance] = {
             'comparison': df_comparison,
-            'evaluation': evaluation_results
+            'evaluation': evaluation_results,
+            'risk_profiles': profiles
         }
     
     # Crear resumen global
@@ -125,29 +163,23 @@ def drug_prediction_multiple_substances(substances=None):
 @flow(name="Pipeline de Predicción - Top Sustancias")
 def drug_prediction_top_substances(n_substances=5):
     """
-    Pipeline para las N sustancias más comunes
+    Pipeline para las N sustancias más consumidas (detección automática)
     
     Args:
         n_substances: Número de sustancias a procesar
     """
-    # Sustancias más relevantes por prevalencia de consumo
-    top_substances = [
-        "Cannabis",
-        "Alcohol", 
-        "Nicotine",
-        "Caff",
-        "Chocolate"
-    ][:n_substances]
+    # Detectar automáticamente las más consumidas
+    top_substances = get_top_consumed_substances(DATA_PATH, n_substances)
     
     return drug_prediction_multiple_substances(top_substances)
 
 
 if __name__ == "__main__":
-    # Ejecutar pipeline para una sustancia específica
-    # result = drug_prediction_single_substance("Cannabis")
+    # Pipeline: 5 sustancias más consumidas
+    #results = drug_prediction_top_substances(n_substances=5)
     
-    # Ejecutar pipeline para las top 5 sustancias
-    results = drug_prediction_top_substances(n_substances=5)
-    
-    # Ejecutar pipeline para TODAS las sustancias (toma más tiempo)
-    # results = drug_prediction_multiple_substances()
+    # Pipeline: Una sola sustancia
+    #result = drug_prediction_single_substance("Semer")
+
+    # Pipeline: Todas las sustancias):
+    results = drug_prediction_multiple_substances()

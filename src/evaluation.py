@@ -1,3 +1,7 @@
+"""
+Módulo de evaluación de modelos con Prefect
+"""
+
 import time
 import pandas as pd
 import numpy as np
@@ -129,13 +133,15 @@ def evaluate_model(model, X_test, y_test, model_name, substance):
     cm = calculate_confusion_matrix(y_test, y_pred)
     
     results = {
+        'model': model,
         'model_name': model_name,
         'substance': substance,
         'metrics': metrics,
         'report': report,
         'confusion_matrix': cm,
         'inference_time': inference_time,
-        'n_samples': len(y_test)
+        'n_samples': len(y_test),
+        'y_pred': y_pred
     }
     
     return results

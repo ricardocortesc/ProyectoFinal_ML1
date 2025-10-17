@@ -1,3 +1,7 @@
+"""
+Módulo de carga y preprocesamiento de datos con Prefect
+"""
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from prefect import task
@@ -95,21 +99,26 @@ def split_data(X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=Tr
         stratify: Si usar estratificación
     
     Returns:
-        tuple: (X_train, X_test, y_train, y_test)
+        tuple: (X_train, X_test, y_train, y_test) o None si falla estratificación
     """
     stratify_param = y if stratify else None
     
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, 
-        test_size=test_size, 
-        random_state=random_state,
-        stratify=stratify_param
-    )
+    try:
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, 
+            test_size=test_size, 
+            random_state=random_state,
+            stratify=stratify_param
+        )
+        
+        print(f"Train set: {X_train.shape[0]} muestras")
+        print(f"Test set: {X_test.shape[0]} muestras")
+        
+        return X_train, X_test, y_train, y_test
     
-    print(f"Train set: {X_train.shape[0]} muestras")
-    print(f"Test set: {X_test.shape[0]} muestras")
-    
-    return X_train, X_test, y_train, y_test
+    except ValueError as e:
+        print(f"⚠️  No se puede estratificar (clases insuficientes). Dividiendo sin estratificación...")
+        return split_data(X, y, test_size, random_state, stratify=False)
 
 
 @task(name="Preparar Datos para Sustancia")
@@ -170,3 +179,40 @@ def prepare_all_substances(filepath=DATA_PATH):
         }
     
     return all_data
+
+
+@task(name="Detectar Top Sustancias Consumidas")
+def get_top_consumed_substances(filepath=DATA_PATH, n=5):
+    """
+    Identifica las N sustancias más consumidas
+    
+    Args:
+        filepath: Ruta al CSV
+        n: Número de sustancias a retornar
+    
+    Returns:
+        list: Lista de sustancias ordenadas por consumo
+    """
+    df = load_data(filepath)
+    df_clean = clean_data(df)
+    
+    consumption_scores = {}
+    
+    for substance in TARGET_COLUMNS:
+        # Calcular score de consumo (clases altas valen más)
+        y = df_clean[substance]
+        # Score = promedio ponderado de las clases
+        score = (y > 0).sum()  # Cantidad que consumió al menos una vez
+        consumption_scores[substance] = score
+    
+    # Ordenar por score descendente
+    sorted_substances = sorted(consumption_scores.items(), key=lambda x: x[1], reverse=True)
+    top_substances = [s[0] for s in sorted_substances[:n]]
+    
+    print(f"\n{'='*60}")
+    print(f"Top {n} sustancias más consumidas:")
+    print(f"{'='*60}")
+    for i, (substance, score) in enumerate(sorted_substances[:n], 1):
+        print(f"{i}. {substance:15} - {score} personas ({score/len(df_clean)*100:.1f}%)")
+    
+    return top_substances

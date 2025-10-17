@@ -4,9 +4,9 @@
 - Andrés Felipe Sanchez Rincón
 
 **Modo de ejecución**
-- Ejecutar el main.py directamente
+- Ejecutar el pipeline.py directamente
 
 **Modo de Ejecución Recomendable**
 - Anaconda Prompt "conda activate <nombre_ambiente>
 - Anaconda Prompt "cd <ruta_archivo>"
-- Aanaconda Prompt "python main.py"
+- Aanaconda Prompt "python pipeline.py"

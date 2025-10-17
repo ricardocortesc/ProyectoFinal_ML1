@@ -1,9 +1,6 @@
-"""
-Módulo de carga y preprocesamiento de datos
-"""
-
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from prefect import task
 from utils import (
     COLUMN_NAMES, 
     FEATURE_COLUMNS, 
@@ -15,6 +12,7 @@ from utils import (
 )
 
 
+@task(name="Cargar Dataset")
 def load_data(filepath=DATA_PATH):
     """
     Carga el dataset desde CSV
@@ -30,6 +28,7 @@ def load_data(filepath=DATA_PATH):
     return df
 
 
+@task(name="Limpiar Datos")
 def clean_data(df):
     """
     Limpia y preprocesa el dataset
@@ -55,6 +54,7 @@ def clean_data(df):
     return df_clean
 
 
+@task(name="Separar Features y Target")
 def get_X_y(df, target_substance):
     """
     Separa features (X) y target (y) para una sustancia específica
@@ -82,6 +82,7 @@ def get_X_y(df, target_substance):
     return X, y
 
 
+@task(name="Dividir Train/Test")
 def split_data(X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=True):
     """
     Divide datos en train y test
@@ -111,6 +112,7 @@ def split_data(X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=Tr
     return X_train, X_test, y_train, y_test
 
 
+@task(name="Preparar Datos para Sustancia")
 def prepare_data_for_substance(filepath=DATA_PATH, target_substance="Cannabis"):
     """
     Pipeline completo de preparación de datos para una sustancia
@@ -139,6 +141,7 @@ def prepare_data_for_substance(filepath=DATA_PATH, target_substance="Cannabis"):
     return X_train, X_test, y_train, y_test
 
 
+@task(name="Preparar Todas las Sustancias")
 def prepare_all_substances(filepath=DATA_PATH):
     """
     Prepara datos para todas las sustancias

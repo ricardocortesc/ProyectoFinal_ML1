@@ -1,5 +1,5 @@
 # Proyecto Final - Machine Learning 1
-- Sebastián Castellano Estupiñan
+- Sebastián Castellanos Estupiñan
 - Ricardo Andrés Cortés Coronell
 - Andrés Felipe Sanchez Rincón
 
@@ -7,7 +7,7 @@
 - Ejecutar el pipeline.py directamente
 
 **Modo de Ejecución Recomendable**
-- Anaconda Prompt "conda activate <nombre_ambiente>
+- Anaconda Prompt "conda activate <nombre_ambiente>"
 - Anaconda Prompt "cd <ruta_archivo>"
 - Aanaconda Prompt "python pipeline.py"
 

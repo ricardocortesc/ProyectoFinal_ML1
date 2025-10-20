@@ -1,6 +1,4 @@
-"""
-Módulo de visualización con Prefectsscacasc
-"""
+#Visualización de resultados
 
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -13,17 +11,6 @@ import os
 
 @task(name="Graficar Matriz de Confusión")
 def plot_confusion_matrix(cm, substance, model_name):
-    """
-    Genera y guarda gráfico de matriz de confusión
-    
-    Args:
-        cm: Matriz de confusión
-        substance: Nombre de la sustancia
-        model_name: Nombre del modelo
-    
-    Returns:
-        str: Ruta del archivo guardado
-    """
     os.makedirs(FIGURES_PATH, exist_ok=True)
     
     plt.figure(figsize=(10, 8))
@@ -45,16 +32,6 @@ def plot_confusion_matrix(cm, substance, model_name):
 
 @task(name="Graficar Comparación de Modelos")
 def plot_model_comparison(df_comparison, substance):
-    """
-    Genera gráfico comparativo de modelos
-    
-    Args:
-        df_comparison: DataFrame con métricas
-        substance: Nombre de la sustancia
-    
-    Returns:
-        str: Ruta del archivo guardado
-    """
     os.makedirs(FIGURES_PATH, exist_ok=True)
     
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
@@ -96,20 +73,8 @@ def plot_model_comparison(df_comparison, substance):
 
 @task(name="Graficar Feature Importance")
 def plot_feature_importance(model, feature_names, substance, model_name):
-    """
-    Genera gráfico de importancia de features
-    
-    Args:
-        model: Modelo entrenado (debe tener feature_importances_)
-        feature_names: Lista de nombres de features
-        substance: Nombre de la sustancia
-        model_name: Nombre del modelo
-    
-    Returns:
-        str: Ruta del archivo guardado
-    """
     if not hasattr(model, 'feature_importances_'):
-        print(f"⚠️  {model_name} no tiene feature_importances_")
+        print(f"{model_name} no tiene feature_importances_")
         return None
     
     os.makedirs(FIGURES_PATH, exist_ok=True)
@@ -120,8 +85,8 @@ def plot_feature_importance(model, feature_names, substance, model_name):
     plt.figure(figsize=(10, 6))
     plt.bar(range(len(importances)), importances[indices])
     plt.xticks(range(len(importances)), 
-               [feature_names[i] for i in indices], 
-               rotation=45, ha='right')
+                [feature_names[i] for i in indices], 
+                rotation=45, ha='right')
     plt.xlabel('Features')
     plt.ylabel('Importancia')
     plt.title(f'Importancia de Features: {substance} - {model_name}')
@@ -138,17 +103,6 @@ def plot_feature_importance(model, feature_names, substance, model_name):
 
 @task(name="Analizar Perfiles de Riesgo")
 def analyze_risk_profiles(y_true, y_pred, substance):
-    """
-    Analiza perfiles de riesgo según clasificación
-    
-    Args:
-        y_true: Valores reales
-        y_pred: Valores predichos
-        substance: Nombre de la sustancia
-    
-    Returns:
-        dict: Análisis de perfiles
-    """
     profiles = {
         'Bajo Riesgo (CL0)': {
             'true_count': (y_true == 0).sum(),
@@ -159,7 +113,7 @@ def analyze_risk_profiles(y_true, y_pred, substance):
             'true_count': ((y_true >= 1) & (y_true <= 3)).sum(),
             'predicted_count': ((y_pred >= 1) & (y_pred <= 3)).sum(),
             'correctly_identified': ((y_true >= 1) & (y_true <= 3) & 
-                                   (y_pred >= 1) & (y_pred <= 3)).sum()
+                                    (y_pred >= 1) & (y_pred <= 3)).sum()
         },
         'Alto Riesgo (CL4-CL6)': {
             'true_count': (y_true >= 4).sum(),
@@ -185,16 +139,6 @@ def analyze_risk_profiles(y_true, y_pred, substance):
 
 @task(name="Graficar Perfiles de Riesgo")
 def plot_risk_profiles(profiles, substance):
-    """
-    Genera gráfico de perfiles de riesgo
-    
-    Args:
-        profiles: Dict con análisis de perfiles
-        substance: Nombre de la sustancia
-    
-    Returns:
-        str: Ruta del archivo guardado
-    """
     os.makedirs(FIGURES_PATH, exist_ok=True)
     
     profile_names = list(profiles.keys())

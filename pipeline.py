@@ -1,6 +1,4 @@
-"""
-Pipeline principal orquestado con Prefect
-"""
+#Flujo Principal del Proyecto
 
 from prefect import flow
 from src.data_processing import (
@@ -28,13 +26,7 @@ from utils import DATA_PATH, TARGET_COLUMNS, FEATURE_COLUMNS
 
 
 @flow(name="Pipeline de Predicción - Una Sustancia")
-def drug_prediction_single_substance(substance="Semer"):
-    """
-    Pipeline completo para predecir consumo de una sustancia
-    
-    Args:
-        substance: Nombre de la sustancia a predecir
-    """
+def drug_prediction_single_substance(substance="Cannabis"):
     print(f"\n{'#'*80}")
     print(f"# INICIANDO PIPELINE PARA: {substance}")
     print(f"{'#'*80}\n")
@@ -84,12 +76,6 @@ def drug_prediction_single_substance(substance="Semer"):
 
 @flow(name="Pipeline de Predicción - Múltiples Sustancias")
 def drug_prediction_multiple_substances(substances=None):
-    """
-    Pipeline para predecir consumo de múltiples sustancias
-    
-    Args:
-        substances: Lista de sustancias (None = todas)
-    """
     if substances is None:
         substances = TARGET_COLUMNS
     
@@ -162,12 +148,6 @@ def drug_prediction_multiple_substances(substances=None):
 
 @flow(name="Pipeline de Predicción - Top Sustancias")
 def drug_prediction_top_substances(n_substances=5):
-    """
-    Pipeline para las N sustancias más consumidas (detección automática)
-    
-    Args:
-        n_substances: Número de sustancias a procesar
-    """
     # Detectar automáticamente las más consumidas
     top_substances = get_top_consumed_substances(DATA_PATH, n_substances)
     
@@ -179,7 +159,7 @@ if __name__ == "__main__":
     #results = drug_prediction_top_substances(n_substances=5)
     
     # Pipeline: Una sola sustancia
-    #result = drug_prediction_single_substance("Semer")
+    result = drug_prediction_single_substance("Cannabis")
 
-    # Pipeline: Todas las sustancias):
-    results = drug_prediction_multiple_substances()
+    # Pipeline: Todas las sustancias:
+    #results = drug_prediction_multiple_substances()

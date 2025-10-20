@@ -1,6 +1,4 @@
-"""
-Módulo de carga y preprocesamiento de datos con Prefect
-"""
+#Procesamiento de los datos
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -18,15 +16,6 @@ from utils import (
 
 @task(name="Cargar Dataset")
 def load_data(filepath=DATA_PATH):
-    """
-    Carga el dataset desde CSV
-    
-    Args:
-        filepath: Ruta al archivo CSV
-    
-    Returns:
-        pd.DataFrame: Dataset cargado con nombres de columnas
-    """
     df = pd.read_csv(filepath, header=None, names=COLUMN_NAMES)
     print(f"Dataset cargado: {df.shape[0]} filas, {df.shape[1]} columnas")
     return df
@@ -34,15 +23,6 @@ def load_data(filepath=DATA_PATH):
 
 @task(name="Limpiar Datos")
 def clean_data(df):
-    """
-    Limpia y preprocesa el dataset
-    
-    Args:
-        df: DataFrame original
-    
-    Returns:
-        pd.DataFrame: Dataset limpio
-    """
     df_clean = df.copy()
     
     # Eliminar columna ID
@@ -60,16 +40,6 @@ def clean_data(df):
 
 @task(name="Separar Features y Target")
 def get_X_y(df, target_substance):
-    """
-    Separa features (X) y target (y) para una sustancia específica
-    
-    Args:
-        df: DataFrame limpio
-        target_substance: Nombre de la sustancia a predecir
-    
-    Returns:
-        tuple: (X, y) - Features y target
-    """
     if target_substance not in TARGET_COLUMNS:
         raise ValueError(f"Sustancia '{target_substance}' no encontrada en el dataset")
     
@@ -88,19 +58,6 @@ def get_X_y(df, target_substance):
 
 @task(name="Dividir Train/Test")
 def split_data(X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=True):
-    """
-    Divide datos en train y test
-    
-    Args:
-        X: Features
-        y: Target
-        test_size: Proporción de test
-        random_state: Semilla aleatoria
-        stratify: Si usar estratificación
-    
-    Returns:
-        tuple: (X_train, X_test, y_train, y_test) o None si falla estratificación
-    """
     stratify_param = y if stratify else None
     
     try:
@@ -117,22 +74,12 @@ def split_data(X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE, stratify=Tr
         return X_train, X_test, y_train, y_test
     
     except ValueError as e:
-        print(f"⚠️  No se puede estratificar (clases insuficientes). Dividiendo sin estratificación...")
+        print(f"No se puede estratificar (clases insuficientes). Se dividirá sin estratificación")
         return split_data(X, y, test_size, random_state, stratify=False)
 
 
 @task(name="Preparar Datos para Sustancia")
 def prepare_data_for_substance(filepath=DATA_PATH, target_substance="Cannabis"):
-    """
-    Pipeline completo de preparación de datos para una sustancia
-    
-    Args:
-        filepath: Ruta al CSV
-        target_substance: Sustancia a predecir
-    
-    Returns:
-        tuple: (X_train, X_test, y_train, y_test)
-    """
     print(f"\n{'='*60}")
     print(f"Preparando datos para: {target_substance}")
     print(f"{'='*60}\n")
@@ -152,15 +99,6 @@ def prepare_data_for_substance(filepath=DATA_PATH, target_substance="Cannabis"):
 
 @task(name="Preparar Todas las Sustancias")
 def prepare_all_substances(filepath=DATA_PATH):
-    """
-    Prepara datos para todas las sustancias
-    
-    Args:
-        filepath: Ruta al CSV
-    
-    Returns:
-        dict: Diccionario con datos divididos por sustancia
-    """
     df = load_data(filepath)
     df_clean = clean_data(df)
     
@@ -183,16 +121,6 @@ def prepare_all_substances(filepath=DATA_PATH):
 
 @task(name="Detectar Top Sustancias Consumidas")
 def get_top_consumed_substances(filepath=DATA_PATH, n=5):
-    """
-    Identifica las N sustancias más consumidas
-    
-    Args:
-        filepath: Ruta al CSV
-        n: Número de sustancias a retornar
-    
-    Returns:
-        list: Lista de sustancias ordenadas por consumo
-    """
     df = load_data(filepath)
     df_clean = clean_data(df)
     

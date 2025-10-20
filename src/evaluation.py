@@ -1,6 +1,4 @@
-"""
-Módulo de evaluación de modelos con Prefect
-"""
+#Evaluación de modelos
 
 import time
 import pandas as pd
@@ -20,16 +18,6 @@ import os
 
 @task(name="Predecir")
 def predict(model, X_test):
-    """
-    Realiza predicciones con un modelo
-    
-    Args:
-        model: Modelo entrenado
-        X_test: Features de test
-    
-    Returns:
-        tuple: (predicciones, tiempo_inferencia)
-    """
     start_time = time.time()
     predictions = model.predict(X_test)
     inference_time = time.time() - start_time
@@ -42,16 +30,6 @@ def predict(model, X_test):
 
 @task(name="Calcular Métricas")
 def calculate_metrics(y_true, y_pred):
-    """
-    Calcula métricas de clasificación
-    
-    Args:
-        y_true: Valores reales
-        y_pred: Valores predichos
-    
-    Returns:
-        dict: Diccionario con métricas
-    """
     metrics = {
         'accuracy': accuracy_score(y_true, y_pred),
         'f1_macro': f1_score(y_true, y_pred, average='macro', zero_division=0),
@@ -67,16 +45,6 @@ def calculate_metrics(y_true, y_pred):
 
 @task(name="Generar Reporte de Clasificación")
 def generate_classification_report(y_true, y_pred):
-    """
-    Genera reporte detallado de clasificación
-    
-    Args:
-        y_true: Valores reales
-        y_pred: Valores predichos
-    
-    Returns:
-        str: Reporte de clasificación
-    """
     report = classification_report(y_true, y_pred, zero_division=0)
     print("\nReporte de Clasificación:")
     print(report)
@@ -85,16 +53,6 @@ def generate_classification_report(y_true, y_pred):
 
 @task(name="Calcular Matriz de Confusión")
 def calculate_confusion_matrix(y_true, y_pred):
-    """
-    Calcula matriz de confusión
-    
-    Args:
-        y_true: Valores reales
-        y_pred: Valores predichos
-    
-    Returns:
-        np.array: Matriz de confusión
-    """
     cm = confusion_matrix(y_true, y_pred)
     print("\nMatriz de Confusión:")
     print(cm)
@@ -103,19 +61,6 @@ def calculate_confusion_matrix(y_true, y_pred):
 
 @task(name="Evaluar Modelo")
 def evaluate_model(model, X_test, y_test, model_name, substance):
-    """
-    Evaluación completa de un modelo
-    
-    Args:
-        model: Modelo entrenado
-        X_test: Features de test
-        y_test: Target de test
-        model_name: Nombre del modelo
-        substance: Nombre de la sustancia
-    
-    Returns:
-        dict: Resultados de evaluación
-    """
     print(f"\n{'='*60}")
     print(f"Evaluando {model_name} para {substance}")
     print(f"{'='*60}")
@@ -149,15 +94,6 @@ def evaluate_model(model, X_test, y_test, model_name, substance):
 
 @task(name="Comparar Modelos")
 def compare_models(evaluation_results):
-    """
-    Compara resultados de múltiples modelos
-    
-    Args:
-        evaluation_results: Lista de resultados de evaluación
-    
-    Returns:
-        pd.DataFrame: DataFrame comparativo
-    """
     comparison_data = []
     
     for result in evaluation_results:
@@ -185,16 +121,6 @@ def compare_models(evaluation_results):
 
 @task(name="Guardar Métricas")
 def save_metrics(df_metrics, filename="model_comparison.csv"):
-    """
-    Guarda métricas en archivo CSV
-    
-    Args:
-        df_metrics: DataFrame con métricas
-        filename: Nombre del archivo
-    
-    Returns:
-        str: Ruta del archivo guardado
-    """
     os.makedirs(METRICS_PATH, exist_ok=True)
     filepath = os.path.join(METRICS_PATH, filename)
     
@@ -206,16 +132,6 @@ def save_metrics(df_metrics, filename="model_comparison.csv"):
 
 @task(name="Obtener Mejor Modelo")
 def get_best_model(df_comparison, metric='F1 Weighted'):
-    """
-    Identifica el mejor modelo según una métrica
-    
-    Args:
-        df_comparison: DataFrame comparativo
-        metric: Métrica a usar para comparación
-    
-    Returns:
-        dict: Información del mejor modelo
-    """
     best_idx = df_comparison[metric].idxmax()
     best_model = df_comparison.iloc[best_idx].to_dict()
     
@@ -230,18 +146,6 @@ def get_best_model(df_comparison, metric='F1 Weighted'):
 
 @task(name="Evaluar Todos los Modelos")
 def evaluate_all_models(models_dict, X_test, y_test, substance):
-    """
-    Evalúa todos los modelos entrenados para una sustancia
-    
-    Args:
-        models_dict: Diccionario con modelos entrenados
-        X_test: Features de test
-        y_test: Target de test
-        substance: Nombre de la sustancia
-    
-    Returns:
-        list: Lista con resultados de evaluación
-    """
     evaluation_results = []
     
     for model_name, model_info in models_dict.items():

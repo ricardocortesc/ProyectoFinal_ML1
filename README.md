@@ -12,6 +12,7 @@
 - Aanaconda Prompt "python pipeline.py"
 
 **Flujos de "pipeline.py"**
+
 Este incluye tres flujos comentados, solo es quitar el # al que se quiera ejecutar.
 - Pipeline: 5 sustancias más consumidas
   #results = drug_prediction_top_substances(n_substances=5)
